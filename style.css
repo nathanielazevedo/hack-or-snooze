@@ -35,19 +35,24 @@ a:hover {
   display: none;
 }
 
-
-
 nav {
   display: flex;
   background-color: #ff6600;
   align-items: center;
+  justify-content: flex-end;
   padding: 5px 20px;
   border-radius: 3px 3px 0 0;
 }
 
 .main-nav-links {
   margin: 0 15px;
+  
 }
+
+b{
+  flex-grow: 1;
+}
+
 
 .nav-link {
   font-size: 0.85rem;

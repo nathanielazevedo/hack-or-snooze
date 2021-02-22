@@ -163,27 +163,27 @@ class User {
 
 
 
+  addFavorite(storyId){
+    return this._toggleFavorite(storyId, 'POST')
+  }
 
-addFavorite(storyId){
-  return this._toggleFavorite(storyId, 'POST')
-}
-
-removeFavorite(storyId){
-  return this._toggleFavorite(storyId, 'DELETE')
-}
+  removeFavorite(storyId){
+    let user = this._toggleFavorite(storyId, 'DELETE');
+    return user;
+  }
 
 
-async _toggleFavorite(storyId, httpVerb){
-  await axios({
-    url: `${BASE_URL}/users/${this.username}/favorites/${storyId}`,
-    method: httpVerb,
-    data:{
-      token: this.loginToken
-    }
-  });
-  await this.retrieveDetails();
-  return this;
-}
+  async _toggleFavorite(storyId, httpVerb){
+    await axios({
+      url: `${BASE_URL}/users/${this.username}/favorites/${storyId}`,
+      method: httpVerb,
+      data:{
+        token: this.loginToken
+      }
+    });
+    await this.retrieveDetails();
+    return this;
+  }
 
   /** Get user instance for the logged-in-user.
    *
@@ -234,6 +234,8 @@ async _toggleFavorite(storyId, httpVerb){
   }
 }
 
+
+
 /**
  * Class to represent a single story.
  */
@@ -254,4 +256,8 @@ class Story {
     this.createdAt = storyObj.createdAt;
     this.updatedAt = storyObj.updatedAt;
   }
+
+  async editStory(title) {
+    
+  } 
 }

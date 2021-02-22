@@ -1,7 +1,7 @@
 $(async function() {
   // cache some selectors we'll be using quite a bit
   const $allStoriesList = $("#all-articles-list");
-  const $submitForm = $("#submit-form");
+  const $newStoryForm = $("#newStoryForm");
   const $filteredArticles = $("#filtered-articles");
   const $loginForm = $("#login-form");
   const $createAccountForm = $("#create-account-form");
@@ -10,7 +10,11 @@ $(async function() {
   const $navLogOut = $("#nav-logout");
   const $navSubmit = $("#nav-submit");
   const $userProfile = $('user-profile');
+  const $profileName = $('#profile-name');
+  const $profileUsername = $('#profile-username');
+  const $profileAccountDate = $('#profile-account-date');
   const $favoritedStories = $("#favorited-articles");
+  const $editStory = $('.edit-story');
   
 
   // global storyList variable
@@ -84,27 +88,27 @@ $(async function() {
   });
 
   /**
-   * Event handler for Navigation to Homepage
+   * Event handler for Navigation to Homepage from clicking "Hack or Snooze"
    */
 
   $("body").on("click", "#nav-all", async function() {
     hideElements();
     await generateStories();
-    $allStoriesList.show();
+    $allStoriesList.slideToggle();
   });
 
-    //na creating stories
+    //Upon clicking nav 'submit' show new story form and all stories list.
 
-$navSubmit.on('click', function(){
+  $navSubmit.on('click', function(){
     if(currentUser){
       hideElements();
-      $allStoriesList.show();
-      $submitForm.slideToggle();
+      $allStoriesList.slideToggle();
+      $newStoryForm.slideToggle();
   }})
 
 
-$submitForm.on('submit', async function(evt){
-  evt.preventDefault();
+  $newStoryForm.on('submit', async function(evt){
+      evt.preventDefault();
 
       const author = $('#author').val();
       const title = $('#title').val();
@@ -135,85 +139,98 @@ $submitForm.on('submit', async function(evt){
 
     $allStoriesList.prepend($li);
     
-    $submitForm.slideUp("slow");
-    $submitForm.trigger("reset");
-      });
+    $newStoryForm.slideUp("slow");
+    $newStoryForm.trigger("reset");
+  });
 
 
     
 
-$('#nav-my-stories').on('click', function(){
-  hideElements();
-    if(currentUser){
-      $userProfile.hide();
-      $favoritedStories.hide();
-      generateMyStories();
-      $ownStories.show();
-    }
+  $('#nav-my-stories').on('click', function(){
+    hideElements();
+      if(currentUser){
+        $userProfile.hide();
+        $favoritedStories.hide();
+        generateMyStories();
+        $ownStories.show();
+      }
 
-  $ownStories.show();
-})
+    $ownStories.show();
+  })
 
-$('body').on('click', '#nav-favorites', function(){
-  hideElements();
-    if(currentUser){
-      generateFaves();
-      $favoritedStories.show();
-    }
-});
+  $('body').on('click', '#nav-favorites', function(){
+    hideElements();
+      if(currentUser){
+        generateFaves();
+        $favoritedStories.show();
+      }
+  });
 
-$ownStories.on('click', '.trash-can', async function(evt){
-  const $closestLi = $(evt.target).closest('li');
-  const storyId = $closestLi.attr('id');
-  await storyList.removeStory(currentUser, storyId);
-  generateMyStories();
-  hideElements();
-  $ownStories.show();
-})
-
-
-
-$('.articles-container').on('click', '.star', async function(evt){
-  if(currentUser){
-    const $tgt = $(evt.target);
-    const $closestLi = $tgt.closest('li');
+  $ownStories.on('click', '.trash-can', async function(evt){
+    const $closestLi = $(evt.target).closest('li');
     const storyId = $closestLi.attr('id');
-  
-  if($tgt.hasClass('fas')){
-    await currentUser.removeFavorite(storyId);
-    $tgt.closest('li').toggleClass('fas far');
-  } else{
-    await currentUser.addFavorite(storyId);
-    $tgt.closest('i').toggleClass('fas far');
-  }}
-})
+    await storyList.removeStory(currentUser, storyId);
+    generateMyStories();
+    hideElements();
+    $ownStories.show();
+  })
 
 
-function generateFaves(){
-  $favoritedStories.empty();
-  if(currentUser.favorites.length === 0){
-    $favoritedStories.append("<h5>No favorites added!</h5>")
-  } else{
-    for(let story of currentUser.favorites){
-      let favoriteHTML = generateStoryHTML(story, false, true);
-      $favoritedStories.append(favoriteHTML);
+
+  $('.articles-container').on('click', '.star', async function(evt){
+    if(currentUser){
+      const $tgt = $(evt.target);
+      const $closestLi = $tgt.closest('li');
+      const storyId = $closestLi.attr('id');
+    
+    if($tgt.hasClass('fas')){
+      currentUser = await currentUser.removeFavorite(storyId);
+      $tgt.closest('i').removeClass('fas');
+      $tgt.closest('i').addClass('far');
+    } else{
+      currentUser = await currentUser.addFavorite(storyId);
+      $tgt.closest("i").removeClass("far");
+      $tgt.closest("i").addClass("fas");
+    }
+      if (($('#favorited-articles').not('hidden'))) {
+        generateFaves();
+    }
+    }
+  })
+
+
+  function generateFaves(){
+    $favoritedStories.empty();
+    if(currentUser.favorites.length === 0){
+      $favoritedStories.append("<h5>No favorites added!</h5>")
+    } else {
+      for (let story of currentUser.favorites) {
+        for (let myStory of currentUser.ownStories) {
+          if (story.storyId === myStory.storyId) {
+            isOwnStory = true;
+          } else {
+            isOwnStory = false;
+          }
+        }
+        let favoriteHTML = generateStoryHTML(story, isOwnStory);
+        $favoritedStories.append(favoriteHTML);
+      }
     }
   }
-}
 
-function generateMyStories(){
-  $ownStories.empty();
-  if(currentUser.ownStories.length === 0){
-    $ownStories.append('<h5>No stories added by user yet!</h1>')
-  }
-  else{
-    for(let story of currentUser.ownStories){
-      let ownStoryHTML = generateStoryHTML(story, true);
-      $ownStories.append(ownStoryHTML);
+  function generateMyStories(){
+    $ownStories.empty();
+    if(currentUser.ownStories.length === 0){
+      $ownStories.append('<h5>No stories added by user yet!</h1>')
     }
+    else{
+      for(let story of currentUser.ownStories){
+        let ownStoryHTML = generateStoryHTML(story, true);
+        $ownStories.append(ownStoryHTML);
+      }
+    }
+    $ownStories.show();
   }
-  $ownStories.show();
-}
 
 
   /**
@@ -224,6 +241,7 @@ function generateMyStories(){
   async function checkIfLoggedIn() {
     // let's see if we're logged in
     const token = localStorage.getItem("token");
+    console.log(token)
     const username = localStorage.getItem("username");
 
     // if there is a token in localStorage, call User.getLoggedInUser
@@ -271,8 +289,18 @@ function generateMyStories(){
     $allStoriesList.empty();
 
     // loop through all of our stories and generate HTML for them
+    let isOwnStory = false;
     for (let story of storyList.stories) {
-      const result = generateStoryHTML(story);
+      if (currentUser) {
+        for (let myStory of currentUser.ownStories) {
+          if (story.storyId === myStory.storyId) {
+            isOwnStory = true;
+          } else {
+            isOwnStory = false;
+          }
+        }
+      }
+      const result = generateStoryHTML(story, isOwnStory);
       $allStoriesList.append(result);
     }
   }
@@ -293,9 +321,14 @@ function generateMyStories(){
     let hostName = getHostName(story.url);
     let starType = isFavorite(story) ? "fas" : "far";
 
+    // const editIcon = isOwnStory
+    //   ? `<span class="edit-story" id='${story.title}'>
+    //       <i class="fas fa-edit" id="${story.storyId}"></i>
+    //     </span>`
+    //   : "";
 
     const trashCanIcon = isOwnStory
-    ? `<span class="trash-can">
+      ? `<span class="trash-can">
           <i class="fas fa-trash-alt"></i>
         </span>`
       : "";
@@ -304,6 +337,7 @@ function generateMyStories(){
     const storyMarkup = $(`
       <li id="${story.storyId}">
       ${trashCanIcon}
+      
       <span class="star">
         <i class="${starType} fa-star"></i>
       </span>
@@ -323,13 +357,14 @@ function generateMyStories(){
 
   function hideElements() {
     const elementsArr = [
-      $submitForm,
+      $newStoryForm,
       $allStoriesList,
       $filteredArticles,
       $ownStories,
       $userProfile,
       $loginForm,
-      $createAccountForm
+      $createAccountForm,
+      $favoritedStories
     ];
     elementsArr.forEach($elem => $elem.hide());
   }
@@ -338,6 +373,9 @@ function generateMyStories(){
     $navLogin.hide();
     $navLogOut.show();
     $('.main-nav-links').toggleClass('hidden');
+    $profileName.append(` ${currentUser.name}`);
+    $profileUsername.append(` ${currentUser.username}`);
+    $profileAccountDate.append(` ${currentUser.createdAt}`);
   }
 
   /* simple function to pull the hostname from a URL */
@@ -363,4 +401,10 @@ function generateMyStories(){
       localStorage.setItem("username", currentUser.username);
     }
   }
+
+  // $('body').on('click', '.edit-story', async function (evt) {
+  //   hideElements();
+  //   $('#edit-article-form').show();
+  //   $('#edit-title').val(`${$(evt.target).closest('span')[0].id}`)
+  // })
 });
