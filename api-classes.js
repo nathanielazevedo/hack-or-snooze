@@ -117,17 +117,24 @@ class User {
    */
 
   static async create(username, password, name) {
-    const response = await axios.post(`${BASE_URL}/signup`, {
-      user: {
-        username,
-        password,
-        name
-      }
-    });
-
+    try {
+      const response = await axios.post(`${BASE_URL}/signup`, {
+        user: {
+          username,
+          password,
+          name
+        }
+      });
+    }
+    catch {
+      return null;
+    }
     // build a new User instance from the API response
+    
     const newUser = new User(response.data.user);
+    
 
+    
     // attach the token to the newUser instance for convenience
     newUser.loginToken = response.data.token;
 
@@ -168,7 +175,7 @@ class User {
   }
 
   removeFavorite(storyId){
-    let user = this._toggleFavorite(storyId, 'DELETE');
+    const user = this._toggleFavorite(storyId, 'DELETE');
     return user;
   }
 

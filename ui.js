@@ -59,7 +59,15 @@ $(async function() {
     let password = $("#create-account-password").val();
 
     // call the create method, which calls the API and then builds a new user instance
-    const newUser = await User.create(username, password, name);
+    
+      const newUser = await User.create(username, password, name);
+    
+    if(!newUser) {
+      $('#create-error').show();
+      $('#create-error').text('Username taken');
+      console.log('bad')
+      return;
+    }
     currentUser = newUser;
     syncCurrentUserToLocalStorage();
     loginAndSubmitForm();
@@ -321,11 +329,11 @@ $(async function() {
     let hostName = getHostName(story.url);
     let starType = isFavorite(story) ? "fas" : "far";
 
-    // const editIcon = isOwnStory
-    //   ? `<span class="edit-story" id='${story.title}'>
-    //       <i class="fas fa-edit" id="${story.storyId}"></i>
-    //     </span>`
-    //   : "";
+    const editIcon = isOwnStory
+      ? `<span class="edit-story" id='${story.title}'>
+          <i class="fas fa-edit" id="${story.storyId}"></i>
+        </span>`
+      : "";
 
     const trashCanIcon = isOwnStory
       ? `<span class="trash-can">
@@ -337,7 +345,7 @@ $(async function() {
     const storyMarkup = $(`
       <li id="${story.storyId}">
       ${trashCanIcon}
-      
+      ${editIcon}
       <span class="star">
         <i class="${starType} fa-star"></i>
       </span>
@@ -402,9 +410,9 @@ $(async function() {
     }
   }
 
-  // $('body').on('click', '.edit-story', async function (evt) {
-  //   hideElements();
-  //   $('#edit-article-form').show();
-  //   $('#edit-title').val(`${$(evt.target).closest('span')[0].id}`)
-  // })
+  $('body').on('click', '.edit-story', async function (evt) {
+    hideElements();
+    $('#edit-article-form').show();
+    $('#edit-title').val(`${$(evt.target).closest('span')[0].id}`)
+  })
 });
